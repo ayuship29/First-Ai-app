@@ -1,65 +1,93 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
+import { motion } from "framer-motion";
+import Spline from "@splinetool/react-spline";
 
 export default function Home() {
+  const [input, setInput] = useState("");
+  const [reply, setReply] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const askAI = async () => {
+    if (!input.trim()) return;
+    setLoading(true);
+    setReply("");
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
+
+      const data = await res.json();
+
+      setReply(data.reply || "⚠️ No response from AI.");
+    } catch (error) {
+      console.error(error);
+      setReply("⚠️ AI failed to respond. Check console.");
+    }
+
+    setLoading(false);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="relative min-h-screen flex flex-col items-center justify-center gap-4 p-4 bg-black overflow-hidden">
+      <div
+        className="absolute inset-0 origin-top opacity-40 animate-gridmove"
+        style={{
+          backgroundImage: `linear-gradient(#1f2937 1px, transparent 1px),
+                            linear-gradient(90deg, #1f2937 1px, transparent 1px)`,
+          backgroundSize: "50px 50px",
+          transform: "perspective(900px) rotateX(65deg)",
+        }}
+      />
+
+      <motion.img
+        src="/robot.png"
+        alt="AI Robot"
+        className="w-80 z-50"
+        animate={{ y: [0, -12, 0] }}
+        transition={{ repeat: Infinity, duration: 3 }}
+      />
+
+      <motion.h1
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-3xl font-bold z-10 text-white"
+      >
+        HOW CAN I HELP YOU ?
+      </motion.h1>
+
+      <motion.textarea
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="border-3 p-3 m-5 w-150 rounded z-20 bg-gray-900 border-b-cyan-200"
+        placeholder="Ask something..."
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+      />
+
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={askAI}
+        className="bg-blue-600 text-white text-2xl font-sans px-5 py-3 rounded z-10"
+      >
+        {loading ? "Thinking..." : "Ask AI"}
+      </motion.button>
+
+      {reply && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="border p-4 mt-4 w-80 bg-gray-100 text-gray-900 rounded z-10"
+        >
+          {reply}
+        </motion.div>
+      )}
+    </main>
   );
 }
